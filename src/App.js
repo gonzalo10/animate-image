@@ -17,38 +17,24 @@ class App extends React.Component {
 		const errs = [];
 		const files = Array.from(e.target.files);
 
-		const formData = new FormData();
-		const types = ['image/png', 'image/jpeg', 'image/gif'];
-
-		files.forEach((file, i) => {
-			if (types.every(type => file.type !== type)) {
-				errs.push(`'${file.type}' is not a supported format`);
-			}
-
-			if (file.size > 150000) {
-				errs.push(`'${file.name}' is too large, please pick a smaller file`);
-			}
-
-			formData.append(i, file);
-		});
-
-		if (errs.length) {
-			throw errs;
-		}
-
-		fetch(`${API_URL}/image-upload`, {
-			method: 'POST',
-			body: formData,
-		})
-			.then(res => {
-				if (!res.ok) {
-					throw res;
-				}
-				return res.json();
+		var reader = new FileReader();
+		reader.readAsDataURL(files[0]);
+		reader.onloadend = function() {
+			var base64data = reader.result;
+			fetch(`${API_URL}`, {
+				method: 'POST',
+				body: { image: base64data },
 			})
-			.catch(err => {
-				console.log(err);
-			});
+				.then(res => {
+					if (!res.ok) {
+						throw res;
+					}
+					return res.json();
+				})
+				.catch(err => {
+					console.log(err);
+				});
+		};
 	}
 
 	handleChange(event) {
