@@ -2,6 +2,7 @@ import React from 'react';
 import Buttons from './Buttons';
 import { API_URL } from './config';
 import './App.css';
+import axios from 'axios';
 
 class App extends React.Component {
 	constructor(props) {
@@ -21,9 +22,12 @@ class App extends React.Component {
 		reader.readAsDataURL(files[0]);
 		reader.onloadend = function() {
 			var base64data = reader.result;
-			fetch(`${API_URL}`, {
-				method: 'POST',
-				body: { image: base64data },
+			axios({
+				method: 'post',
+				url: 'http://127.0.0.1:5000/watermask',
+				data: {
+					image: base64data,
+				},
 			})
 				.then(res => {
 					if (!res.ok) {
@@ -34,6 +38,10 @@ class App extends React.Component {
 				.catch(err => {
 					console.log(err);
 				});
+			// axios
+			// 	.post(``, {
+			//
+			// 	})
 		};
 	}
 
