@@ -27,6 +27,24 @@ const CloseIcon = styled.div`
 	cursor: pointer;
 `;
 
+const Background = styled.div`
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-image: url("${props => props.image}");
+  background-size: cover;
+`;
+const Water = styled.div`
+	background-image: url('${props => props.image}');
+	background-size: cover;
+	top: 0;
+	left: 0;
+	height: 100%;
+  width: 100%;
+  filter: url("#turbulence");
+`;
+
 const ImgPreview = ({ imagen, removeImg }) => {
 	const [isImgHovered, setImageHovered] = useState(false);
 	const handleMouseEnter = () => {
@@ -77,6 +95,85 @@ const uploadImage = (e, displaySecondImage) => {
 	};
 };
 
+const SVG = () => (
+	<svg>
+		<filter id='turbulence' x='0' y='0' width='100%' height='100%'>
+			<feTurbulence
+				id='sea-filter'
+				numOctaves='3'
+				seed='2'
+				baseFrequency='0.5 0.5'></feTurbulence>
+			<feDisplacementMap scale='50' in='SourceGraphic'></feDisplacementMap>
+			<animate
+				xlinkHref='#sea-filter'
+				attributeName='baseFrequency'
+				dur='60s'
+				keyTimes='0;0.5;1'
+				values='0.02 0.06;0.04 0.08;0.02 0.06'
+				repeatCount='indefinite'
+			/>
+		</filter>
+	</svg>
+);
+
+const blackToTransparent = (ctx, imageData) => {
+	const pix = imageData.data;
+	for (var i = 0; i < pix.length; i += 4) {
+		const r = pix[i];
+		const g = pix[i + 1];
+		const b = pix[i + 2];
+		if (r === 0 && g === 0 && b === 0) {
+			pix[i + 3] = 0;
+		}
+	}
+	ctx.putImageData(imageData, 0, 0);
+};
+const greenToOriginal = (ctx, imageData, imageDataInitial) => {
+	const pix = imageData.data;
+	const pixInit = imageDataInitial.data;
+	for (var i = 0; i < pix.length; i += 4) {
+		const r = pix[i];
+		const g = pix[i + 1];
+		const b = pix[i + 2];
+		if (r === 0 && g === 255 && b === 0) {
+			pix[i] = pixInit[i];
+			pix[i + 1] = pixInit[i + 1];
+			pix[i + 2] = pixInit[i + 2];
+		}
+	}
+	ctx.putImageData(imageData, 0, 0);
+};
+
+const treatData = file => {
+	var img = new Image();
+	img.src = file;
+	var canvas = document.getElementById('myCanvas');
+	var ctx = canvas.getContext('2d');
+	img.onload = function() {
+		ctx.drawImage(img, 0, 0);
+		img.style.display = 'none';
+		var imageData = ctx.getImageData(0, 0, img.width, img.height);
+		ctx.putImageData(imageData, 0, 0);
+	};
+};
+const treatData2 = (file, uploadTransformedImage) => {
+	var img = new Image();
+	img.src = file;
+	var canvas = document.getElementById('myCanvas2');
+	var canvasInitial = document.getElementById('myCanvas');
+	var ctx = canvas.getContext('2d');
+	var ctxInitial = canvasInitial.getContext('2d');
+	img.onload = function() {
+		ctx.drawImage(img, 0, 0);
+		img.style.display = 'none';
+		var imageData = ctx.getImageData(0, 0, img.width, img.height);
+		var imageDataInitial = ctxInitial.getImageData(0, 0, img.width, img.height);
+		greenToOriginal(ctx, imageData, imageDataInitial);
+		blackToTransparent(ctx, imageData);
+		uploadTransformedImage(canvas.toDataURL());
+	};
+};
+
 class App extends React.Component {
 	constructor(props) {
 		super(props);
@@ -84,10 +181,25 @@ class App extends React.Component {
 			file: null,
 			resultedImage: null,
 			loading: false,
+			transformedImage: null,
 		};
 		this.handleChange = this.handleChange.bind(this);
 		this.removeImg = this.removeImg.bind(this);
 		this.displaySecondImage = this.displaySecondImage.bind(this);
+		this.handleClick = this.handleClick.bind(this);
+		this.handleClickMask = this.handleClickMask.bind(this);
+		this.uploadTransformedImage = this.uploadTransformedImage.bind(this);
+	}
+
+	handleClick() {
+		treatData(this.state.file);
+	}
+	handleClickMask() {
+		treatData2(this.state.resultedImage, this.uploadTransformedImage);
+	}
+
+	uploadTransformedImage(image) {
+		this.setState({ transformedImage: image });
 	}
 
 	removeImg() {
@@ -106,12 +218,32 @@ class App extends React.Component {
 		});
 	}
 	render() {
-		const { file, resultedImage } = this.state;
+		const { file, resultedImage, transformedImage, loading } = this.state;
 		return (
 			<div>
 				<ImgPreview imagen={file} removeImg={this.removeImg} />
 				<Buttons onChange={this.handleChange} />
-				{resultedImage ? <img src={resultedImage} /> : <div>Loading...</div>}
+				{resultedImage ? (
+					<img src={resultedImage} />
+				) : loading ? (
+					<div>Loading...</div>
+				) : null}
+				{/* <canvas
+					id='myCanvas'
+					width='250'
+					height='250'
+					style={{ border: '1px solid black' }}></canvas>
+				<button onClick={this.handleClick}>Convert</button>
+				<canvas
+					id='myCanvas2'
+					width='250'
+					height='250'
+					style={{ border: '1px solid black' }}></canvas>
+				<button onClick={this.handleClickMask}>Convert</button> 
+				<Background image={file}>
+					<Water image={transformedImage} />
+				</Background>
+				<SVG /> */}
 			</div>
 		);
 	}
