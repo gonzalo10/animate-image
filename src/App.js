@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import Buttons from './Buttons';
-import { API_URL } from './config';
-import './App.css';
-import axios from 'axios';
-import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimesCircle, faImage } from '@fortawesome/free-solid-svg-icons';
-import { TransitionGroup } from 'react-transition-group';
+import React, { useState } from "react";
+import Buttons from "./Buttons";
+import { API_URL } from "./config";
+import "./App.css";
+import axios from "axios";
+import styled from "styled-components";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTimesCircle, faImage } from "@fortawesome/free-solid-svg-icons";
+import { TransitionGroup } from "react-transition-group";
+import * as THREE from "three";
+// import { GUI } from "three";
+import { Water } from "./Water";
+var OrbitControls = require("three-orbit-controls")(THREE);
 const ImgWrapper = styled.img`
 	max-width: 100%;
 	max-height: 300px;
@@ -35,7 +39,7 @@ const Background = styled.div`
   background-image: url("${props => props.image}");
   background-size: cover;
 `;
-const Water = styled.div`
+const Water_style = styled.div`
 	background-image: url('${props => props.image}');
 	background-size: cover;
 	top: 0;
@@ -54,16 +58,25 @@ const ImgPreview = ({ imagen, removeImg }) => {
 		setImageHovered(false);
 	};
 	let ImagenContent = (
-		<FontAwesomeIcon icon={faImage} color='#3B5998' size='10x' />
+		<FontAwesomeIcon icon={faImage} color="#3B5998" size="10x" />
 	);
 	if (imagen) {
-		ImagenContent = <ImgWrapper src={imagen} onMouseEnter={handleMouseEnter} />;
+		ImagenContent = (
+			<ImgWrapper
+				src={imagen}
+				onMouseEnter={handleMouseEnter}
+			/>
+		);
 	}
 	return (
 		<ImagenWrapper onMouseLeave={handleMouseLeave}>
 			{isImgHovered && (
 				<CloseIcon onClick={removeImg}>
-					<FontAwesomeIcon icon={faTimesCircle} color='#3B5998' size='3x' />
+					<FontAwesomeIcon
+						icon={faTimesCircle}
+						color="#3B5998"
+						size="3x"
+					/>
 				</CloseIcon>
 			)}
 			{ImagenContent}
@@ -79,14 +92,16 @@ const uploadImage = (e, displaySecondImage) => {
 	reader.onloadend = function() {
 		var base64data = reader.result;
 		axios({
-			method: 'post',
-			url: 'http://127.0.0.1:5000/watermask',
+			method: "post",
+			url: "http://127.0.0.1:5000/watermask",
 			data: {
-				image: base64data,
-			},
+				image: base64data
+			}
 		})
 			.then(res => {
-				displaySecondImage(`data:image/png;base64,${res.data}`);
+				displaySecondImage(
+					`data:image/png;base64,${res.data}`
+				);
 				console.log(res);
 			})
 			.catch(err => {
@@ -97,20 +112,24 @@ const uploadImage = (e, displaySecondImage) => {
 
 const SVG = () => (
 	<svg>
-		<filter id='turbulence' x='0' y='0' width='100%' height='100%'>
+		<filter id="turbulence" x="0" y="0" width="100%" height="100%">
 			<feTurbulence
-				id='sea-filter'
-				numOctaves='3'
-				seed='2'
-				baseFrequency='0.5 0.5'></feTurbulence>
-			<feDisplacementMap scale='50' in='SourceGraphic'></feDisplacementMap>
+				id="sea-filter"
+				numOctaves="3"
+				seed="2"
+				baseFrequency="0.5 0.5"
+			></feTurbulence>
+			<feDisplacementMap
+				scale="50"
+				in="SourceGraphic"
+			></feDisplacementMap>
 			<animate
-				xlinkHref='#sea-filter'
-				attributeName='baseFrequency'
-				dur='60s'
-				keyTimes='0;0.5;1'
-				values='0.02 0.06;0.04 0.08;0.02 0.06'
-				repeatCount='indefinite'
+				xlinkHref="#sea-filter"
+				attributeName="baseFrequency"
+				dur="60s"
+				keyTimes="0;0.5;1"
+				values="0.02 0.06;0.04 0.08;0.02 0.06"
+				repeatCount="indefinite"
 			/>
 		</filter>
 	</svg>
@@ -147,11 +166,11 @@ const greenToOriginal = (ctx, imageData, imageDataInitial) => {
 const treatData = file => {
 	var img = new Image();
 	img.src = file;
-	var canvas = document.getElementById('myCanvas');
-	var ctx = canvas.getContext('2d');
+	var canvas = document.getElementById("myCanvas");
+	var ctx = canvas.getContext("2d");
 	img.onload = function() {
 		ctx.drawImage(img, 0, 0);
-		img.style.display = 'none';
+		img.style.display = "none";
 		var imageData = ctx.getImageData(0, 0, img.width, img.height);
 		ctx.putImageData(imageData, 0, 0);
 	};
@@ -159,15 +178,20 @@ const treatData = file => {
 const treatData2 = (file, uploadTransformedImage) => {
 	var img = new Image();
 	img.src = file;
-	var canvas = document.getElementById('myCanvas2');
-	var canvasInitial = document.getElementById('myCanvas');
-	var ctx = canvas.getContext('2d');
-	var ctxInitial = canvasInitial.getContext('2d');
+	var canvas = document.getElementById("myCanvas2");
+	var canvasInitial = document.getElementById("myCanvas");
+	var ctx = canvas.getContext("2d");
+	var ctxInitial = canvasInitial.getContext("2d");
 	img.onload = function() {
 		ctx.drawImage(img, 0, 0);
-		img.style.display = 'none';
+		img.style.display = "none";
 		var imageData = ctx.getImageData(0, 0, img.width, img.height);
-		var imageDataInitial = ctxInitial.getImageData(0, 0, img.width, img.height);
+		var imageDataInitial = ctxInitial.getImageData(
+			0,
+			0,
+			img.width,
+			img.height
+		);
 		greenToOriginal(ctx, imageData, imageDataInitial);
 		blackToTransparent(ctx, imageData);
 		uploadTransformedImage(canvas.toDataURL());
@@ -181,21 +205,127 @@ class App extends React.Component {
 			file: null,
 			resultedImage: null,
 			loading: false,
-			transformedImage: null,
+			transformedImage: null
 		};
 		this.handleChange = this.handleChange.bind(this);
 		this.removeImg = this.removeImg.bind(this);
 		this.displaySecondImage = this.displaySecondImage.bind(this);
 		this.handleClick = this.handleClick.bind(this);
 		this.handleClickMask = this.handleClickMask.bind(this);
-		this.uploadTransformedImage = this.uploadTransformedImage.bind(this);
+		this.uploadTransformedImage = this.uploadTransformedImage.bind(
+			this
+		);
+
+		//		init();
+		//		animate();
+	}
+	componentDidMount() {
+		var scene, camera, renderer, water;
+		var renderer = new THREE.WebGLRenderer({ antialias: true });
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		renderer.setPixelRatio(window.devicePixelRatio);
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		// document.body.appendChild( renderer.domElement );
+		// use ref as a mount point of the Three.js scene instead of the document.body
+		this.mount.appendChild(renderer.domElement);
+		scene = new THREE.Scene();
+
+		// camera
+
+		camera = new THREE.PerspectiveCamera(
+			45,
+			window.innerWidth / window.innerHeight,
+			0.1,
+			1000
+		);
+		camera.position.set(0, 25, 0);
+		camera.lookAt(scene.position);
+
+		// ground
+
+		var groundGeometry = new THREE.PlaneBufferGeometry(
+			20,
+			20,
+			10,
+			10
+		);
+		var groundMaterial = new THREE.MeshBasicMaterial({
+			color: 0xcccccc
+		});
+		var ground = new THREE.Mesh(groundGeometry, groundMaterial);
+		ground.rotation.x = Math.PI * -0.5;
+		scene.add(ground);
+
+		var textureLoader = new THREE.TextureLoader();
+		textureLoader.load(
+			//			"threeimages/FloorsCheckerboard_S_Diffuse.jpg",
+			"threeimages/ocean01.jpeg",
+			function(map) {
+				//map.wrapS = THREE.RepeatWrapping;
+				//map.wrapT = THREE.RepeatWrapping;
+				//map.anisotropy = 16;
+				//map.repeat.set(4, 4);
+				groundMaterial.map = map;
+				groundMaterial.needsUpdate = true;
+			}
+		);
+		// water
+
+		var waterGeometry = new THREE.PlaneBufferGeometry(20, 20);
+		var flowMap = textureLoader.load(
+			//"threeimages/FloorsCheckerboard_S_Diffuse.jpg"
+			"threeimages/miflow.jpg",
+			function(flowMap) {
+				console.log(flowMap);
+				water = new Water(waterGeometry, {
+					scale: 2,
+					textureWidth: 1024,
+					textureHeight: 1024,
+					flowMap: flowMap
+				});
+
+				water.position.y = 1;
+				water.rotation.x = Math.PI * -0.5;
+				scene.add(water);
+
+				// flow map helper
+				/*
+				var helperGeometry = new THREE.PlaneBufferGeometry(
+					20,
+					20
+				);
+				var helperMaterial = new THREE.MeshBasicMaterial(
+					{
+						map: flowMap
+					}
+				);
+				var helper = new THREE.Mesh(
+					helperGeometry,
+					helperMaterial
+				);
+				helper.position.y = 1.01;
+				helper.rotation.x = Math.PI * -0.5;
+				helper.visible = false;
+				scene.add(helper);*/
+				console.log("DONE");
+			}
+		);
+
+		var animate = function() {
+			requestAnimationFrame(animate);
+			renderer.render(scene, camera);
+		};
+		animate();
 	}
 
 	handleClick() {
 		treatData(this.state.file);
 	}
 	handleClickMask() {
-		treatData2(this.state.resultedImage, this.uploadTransformedImage);
+		treatData2(
+			this.state.resultedImage,
+			this.uploadTransformedImage
+		);
 	}
 
 	uploadTransformedImage(image) {
@@ -214,38 +344,17 @@ class App extends React.Component {
 		uploadImage(event, this.displaySecondImage);
 		this.setState({
 			file: URL.createObjectURL(event.target.files[0]),
-			loading: true,
+			loading: true
 		});
 	}
 	render() {
-		const { file, resultedImage, transformedImage, loading } = this.state;
-		return (
-			<div>
-				<ImgPreview imagen={file} removeImg={this.removeImg} />
-				<Buttons onChange={this.handleChange} />
-				{resultedImage ? (
-					<img src={resultedImage} />
-				) : loading ? (
-					<div>Loading...</div>
-				) : null}
-				{/* <canvas
-					id='myCanvas'
-					width='250'
-					height='250'
-					style={{ border: '1px solid black' }}></canvas>
-				<button onClick={this.handleClick}>Convert</button>
-				<canvas
-					id='myCanvas2'
-					width='250'
-					height='250'
-					style={{ border: '1px solid black' }}></canvas>
-				<button onClick={this.handleClickMask}>Convert</button> 
-				<Background image={file}>
-					<Water image={transformedImage} />
-				</Background>
-				<SVG /> */}
-			</div>
-		);
+		const {
+			file,
+			resultedImage,
+			transformedImage,
+			loading
+		} = this.state;
+		return <div ref={ref => (this.mount = ref)} />;
 	}
 }
 export default App;
