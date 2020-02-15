@@ -45,7 +45,7 @@ var Water = function(geometry, options) {
 		textureLoader.load("threeimages/Water_1_M_Normal_1.jpg");
 	var normalMap1 =
 		options.normalMap1 ||
-		textureLoader.load("threeimages/Water_2_M_Normal_1.jpg");
+		textureLoader.load("threeimages/Water_2_M_Normal_2.jpg");
 
 	var cycle = 0.15; // a cycle of a flow map phase
 	var halfCycle = cycle * 0.5;
