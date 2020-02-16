@@ -255,11 +255,12 @@ class App extends React.Component {
 		var ground = new THREE.Mesh(groundGeometry, groundMaterial);
 		ground.rotation.x = Math.PI * -0.5;
 		scene.add(ground);
-
+		var light = new THREE.DirectionalLight(0xffffff, 0.8);
+		scene.add(light);
 		var textureLoader = new THREE.TextureLoader();
 		textureLoader.load(
 			//			"threeimages/FloorsCheckerboard_S_Diffuse.jpg",
-			"threeimages/ocean01.jpeg",
+			"threeimages/ocean02.jpeg",
 			function(map) {
 				//map.wrapS = THREE.RepeatWrapping;
 				//map.wrapT = THREE.RepeatWrapping;
@@ -271,12 +272,33 @@ class App extends React.Component {
 		);
 		// water
 
-		var waterGeometry = new THREE.PlaneBufferGeometry(20, 20);
+		var waterGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
+		/*
+		water = new Water(waterGeometry, {
+			textureWidth: 512,
+			textureHeight: 512,
+			waterNormals: new THREE.TextureLoader().load(
+				"threeimages/waternormals.jpg",
+				function(texture) {
+					texture.wrapS = texture.wrapT =
+						THREE.RepeatWrapping;
+				}
+			),
+			alpha: 1.0,
+			sunDirection: light.position.clone().normalize(),
+			sunColor: 0xffffff,
+			waterColor: 0x001e0f,
+			distortionScale: 3.7,
+			fog: scene.fog !== undefined
+		});
+		water.rotation.x = -Math.PI / 2;
+		scene.add(water);*/
 		var flowMap = textureLoader.load(
 			//"threeimages/FloorsCheckerboard_S_Diffuse.jpg"
-			"threeimages/miflow.jpg",
+			"threeimages/waternormals.jpg",
 			function(flowMap) {
 				console.log(flowMap);
+				/*
 				water = new Water(waterGeometry, {
 					scale: 2,
 					textureWidth: 1024,
@@ -287,32 +309,44 @@ class App extends React.Component {
 				water.position.y = 1;
 				water.rotation.x = Math.PI * -0.5;
 				scene.add(water);
-
+*/
 				// flow map helper
-				/*
-				var helperGeometry = new THREE.PlaneBufferGeometry(
-					20,
-					20
-				);
-				var helperMaterial = new THREE.MeshBasicMaterial(
-					{
-						map: flowMap
-					}
-				);
-				var helper = new THREE.Mesh(
-					helperGeometry,
-					helperMaterial
-				);
-				helper.position.y = 1.01;
-				helper.rotation.x = Math.PI * -0.5;
-				helper.visible = false;
-				scene.add(helper);*/
 				console.log("DONE");
 			}
 		);
 
+		water = new Water(waterGeometry, {
+			scale: 2,
+			textureWidth: 1024,
+			textureHeight: 1024,
+			flowMap: flowMap
+		});
+
+		water.position.y = 1;
+		water.rotation.x = Math.PI * -0.5;
+		scene.add(water);
+		var groundMaterial2 = new THREE.MeshBasicMaterial({
+			color: 0xcccccc
+		});
+		var ground2 = new THREE.Mesh(groundGeometry, groundMaterial2);
+		ground2.rotation.x = Math.PI * -0.5;
+		textureLoader.load(
+			//                      "threeimages/FloorsCheckerboard_S_Diffuse.jpg",
+			"threeimages/back2.png",
+			function(map) {
+				//map.wrapS = THREE.RepeatWrapping;
+				//map.wrapT = THREE.RepeatWrapping;
+				//map.anisotropy = 16;
+				//map.repeat.set(4, 4);
+				console.log("BACK", map);
+				groundMaterial2.map = map;
+				groundMaterial2.needsUpdate = true;
+			}
+		);
+		//scene.add(ground2);
 		var animate = function() {
 			requestAnimationFrame(animate);
+			//			water.material.uniforms["time"].value += 1.0 / 60.0;
 			renderer.render(scene, camera);
 		};
 		animate();
